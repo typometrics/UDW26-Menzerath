@@ -271,8 +271,8 @@ See the [docs/](docs/) directory for detailed documentation:
 
 ## License
 
-<!-- Choose your license -->
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSE) licence.
+You are free to share and adapt the material for any purpose, provided you give appropriate credit.
 
 ## Citation
 
