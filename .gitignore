@@ -1,0 +1,37 @@
+# Credentials (NEVER commit these)
+credentials.json
+*.json
+!credentials.json.template
+
+# Data files (too large for git)
+data/
+2.17_short/
+ud-treebanks-v2.17/
+sud-treebanks-v2.17/
+
+# Generated outputs
+plots/
+html_analyses/
+html_examples/
+latex/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
