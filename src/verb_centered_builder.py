@@ -31,7 +31,8 @@ class VerbCenteredTableBuilder:
                  config: TableConfig,
                  ordering_stats: Optional[Dict] = None,
                  validation_info: Optional[Dict] = None,
-                 extra_legend_items: Optional[List[str]] = None):
+                 extra_legend_items: Optional[List[str]] = None,
+                 config_type: str = 'strict'):
         """
         Initialize the table builder.
         
@@ -41,13 +42,14 @@ class VerbCenteredTableBuilder:
             ordering_stats: Optional ordering statistics for triples
             validation_info: Optional statistical validation info (sample counts, warnings)
             extra_legend_items: Optional list of additional legend strings (e.g., caveats)
+            config_type: 'strict' or 'anyotherside'
         """
         self.position_averages = position_averages
         self.config = config
         self.layout = TableLayout(config)
         self.marginals = MarginalMeansCalculator(position_averages, config)
         self.factors = FactorCalculator(position_averages, config)
-        self.ordering = OrderingStatsFormatter(ordering_stats) if ordering_stats else None
+        self.ordering = OrderingStatsFormatter(ordering_stats, config_type=config_type) if ordering_stats else None
         self.validation_info = validation_info
         self.extra_legend_items = extra_legend_items or []
     
@@ -253,6 +255,7 @@ class VerbCenteredTableBuilder:
             rows.append(self._build_right_row(tot))
             if self.config.show_diagonal_factors and tot > 1:
                 rows.append(self._build_right_diagonal_row(tot))
+                rows.append(self._build_right_vertical_row(tot))
         return rows
     
     def _build_right_row(self, tot: int) -> List[CellData]:
@@ -304,6 +307,28 @@ class VerbCenteredTableBuilder:
                     txt = f"×{factor.value:.2f}{arrow}"
                     color = COLOR_RED if factor.value < 1.0 else COLOR_GREY
                     row[fac_idx] = CellData(
+                        text=txt,
+                        cell_type='factor',
+                        rich_segments=[(txt, color, True)]
+                    )
+        
+        return row
+        
+    def _build_right_vertical_row(self, tot: int) -> List[CellData]:
+        """Build a vertical factor row for right side between tot and tot-1."""
+        row = self._create_empty_row()
+        
+        row[self.layout.label_col_idx] = CellData(text=f"Vert R{tot}-{tot-1}", cell_type='label')
+        
+        if self.config.show_horizontal_factors:
+            for pos in range(1, tot): # positions 1 to tot-1
+                factor = self.factors.get_vertical_factor('right', pos, tot)
+                if factor:
+                    val_idx = self.layout.get_right_column_index(pos)
+                    arrow = self.config.get_arrow_symbol('right', 'vertical')
+                    txt = f"×{factor.value:.2f}{arrow}"
+                    color = COLOR_RED if factor.value < 1.0 else COLOR_GREY
+                    row[val_idx] = CellData(
                         text=txt,
                         cell_type='factor',
                         rich_segments=[(txt, color, True)]
@@ -429,6 +454,7 @@ class VerbCenteredTableBuilder:
         for tot in [1, 2, 3, 4]:
             if self.config.show_diagonal_factors and tot > 1:
                 rows.append(self._build_left_diagonal_row(tot))
+                rows.append(self._build_left_vertical_row(tot))
             rows.append(self._build_left_row(tot))
         return rows
     
@@ -488,6 +514,31 @@ class VerbCenteredTableBuilder:
                         cell_type='factor',
                         rich_segments=[(txt, color, True)]
                     )
+        
+        return row
+        
+    def _build_left_vertical_row(self, tot: int) -> List[CellData]:
+        """Build a vertical factor row for left side between tot and tot-1."""
+        row = self._create_empty_row()
+        
+        row[self.layout.label_col_idx] = CellData(text=f"Vert L{tot}-{tot-1}", cell_type='label')
+        
+        if self.config.show_horizontal_factors:
+            for pos in range(tot, 1, -1):
+                factor = self.factors.get_vertical_factor('left', pos - 1, tot)
+                if factor:
+                    val_idx = self.layout.get_left_column_index(pos - 1)
+                    arrow = self.config.get_arrow_symbol('left', 'vertical')
+                    txt = f"×{factor.value:.2f}{arrow}"
+                    color = COLOR_RED if factor.value < 1.0 else COLOR_GREY
+                    row[val_idx] = CellData(
+                        text=txt,
+                        cell_type='factor',
+                        rich_segments=[(txt, color, True)]
+                    )
+                    
+        return row
+
     def _build_xvx_row(self) -> List[CellData]:
         """
         Build the central Mean(X*) V Mean(X*) row (formerly X V X).
